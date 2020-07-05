@@ -807,6 +807,8 @@ surfaceNormalFixedValueFvPatchVectorField.H \
 analyticalRegion.H \
 analyticalREgionI.H \
 Countlines.H \
+fieldMinMax.H \
+fieldMinMaxTemplates.C \
 $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/postProcess.H \
 $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/addRegionOption.H \
 $(WM_PROJECT_DIR)/src/OpenFOAM/lnInclude/addFunctionObjectOptions.H \

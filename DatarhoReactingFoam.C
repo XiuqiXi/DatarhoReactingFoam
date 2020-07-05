@@ -47,6 +47,7 @@ Description
 #include "analyticalRegion.H"
 #include <math.h>
 #include "Countlines.H"
+#include "fieldMinMax.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
