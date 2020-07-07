@@ -153,11 +153,13 @@ volScalarField wallMassFlux
     dimensionedScalar("wallMassFlux", dimMass/pow3(dimTime), 0.0)
 );
 
-IOdictionary dropletProperties
+
+//create the interface for the initial properties
+IOdictionary analyticalRegionProperties
 (
     IOobject
     (
-        "dropletProperties",
+        "analyticalRegionProperties",
         runTime.constant(),
         mesh,
         IOobject::MUST_READ_IF_MODIFIED,
@@ -165,21 +167,38 @@ IOdictionary dropletProperties
     )
 );
 
-dimensionedScalar originalDropletSize
+//initiate the original pyrolysis length
+dimensionedScalar originalPyrolsisLength
 (
-	"originalDropletSize",
-	dropletProperties.lookup("originalDropletSize")
+	"originalPyrolsisLength",
+	analyticalRegionProperties.lookup("originalPyrolsisLength")
 );
 
-bool assimilationActivation = readBool(dropletProperties.lookup("assimilationActivation"));
+//initiate the location of the pyrolysis
+dimensionedScalar pyrolysisStartPosition
+(
+	"pyrolysisStartPosition",
+	analyticalRegionProperties.lookup("pyrolysisStartPosition")
+);
 
-word assimilationDataType = word(dropletProperties.lookup("assimilationDataType"));
 
-//word assimilationDataName = word(dropletProperties.lookup("assimilationDataName"));
+bool assimilationActivation = readBool(analyticalRegionProperties.lookup("assimilationActivation"));
 
-word interfaceName = word(dropletProperties.lookup("interface"));
 
-analyticalRegion::B = readScalar(dropletProperties.lookup("initialBNumber"));
+word interfaceName = word(analyticalRegionProperties.lookup("interface"));
+
+analyticalRegion::B = readScalar(analyticalRegionProperties.lookup("initialBNumber"));
+//condensedRegion::C = readScalar(analyticalRegionProperties.lookup("initialC"));
+
+//Define the properties of the solid phase
+scalar pyrolysisLowerPosition = pyrolysisStartPosition.value();
+scalar pyrolysisUpperPosition = pyrolysisLowerPosition+originalPyrolsisLength.value();
+
+scalar preheatRegionUpperPosition;
+scalar preheatLength;
+scalar currentStepTime;
+scalar timeInterval;
+scalar previousStepTime = 0;
 
 #include "createMRF.H"
 #include "createRadiationModel.H"
