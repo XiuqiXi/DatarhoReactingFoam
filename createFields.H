@@ -188,7 +188,8 @@ bool assimilationActivation = readBool(analyticalRegionProperties.lookup("assimi
 word interfaceName = word(analyticalRegionProperties.lookup("interface"));
 
 analyticalRegion::B = readScalar(analyticalRegionProperties.lookup("initialBNumber"));
-//condensedRegion::C = readScalar(analyticalRegionProperties.lookup("initialC"));
+condensedRegion::C = readScalar(analyticalRegionProperties.lookup("initialC"));
+analyticalRegion::U_infty = readScalar(analyticalRegionProperties.lookup("ambientVelocity"));
 
 //Define the properties of the solid phase
 scalar pyrolysisLowerPosition = pyrolysisStartPosition.value();
