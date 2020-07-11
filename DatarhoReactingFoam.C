@@ -42,12 +42,10 @@ Description
 #include "fvcSmooth.H"
 #include "wallHeatFlux.H"
 #include "OFstream.H"
-#include "surfaceNormalFixedValueFvPatchVectorField.H"
 #include "fixedValueFvPatchField.H"
 #include "analyticalRegion.H"
-#include <math.h>
+#include "condensedRegion.H"
 #include "Countlines.H"
-#include "fieldMinMax.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
