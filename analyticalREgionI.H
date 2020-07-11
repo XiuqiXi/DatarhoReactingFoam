@@ -1,110 +1,74 @@
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-
-void analyticalRegion::calculateMassFlux(){
-
-	R0square=sqr(R0);
-
-	K = 2*k_g/rho_l/c_pg*log(B+1);
-	Info<<"The liquid density is "<<rho_l<<endl;
-	K_ = K;
-	B_ = B;
-	Info<<"K is "<<K<<endl;
-	Rsquare = R0square-coeff*K*Time_;
-	R = sqrt(Rsquare);
-	R_ = R;
-
-	q_dot_pp_R0 = heatFlux_;
-	q_dot_pp_R = q_dot_pp_R0*R0square/Rsquare;
-
-	m_dot_pp_R = B*q_dot_pp_R/(Y_O_infty*stoi_ratio*Delta_H+c_pg*(T_infty-T_boil));
-	//m_dot_pp_R = q_dot_pp_R/(L+c_pl*(T_boil-T_infty));
-
-	m_dot_pp_R0 = m_dot_pp_R*Rsquare/R0square;
-
-	//B = exp(m_dot_pp_R*R*c_pg/k_g)-1;
-
-
-
-	Info<<"mass flux of the interface is  "<<m_dot_pp_R0<<" "<<heatFlux_<<endl;
-
-	//m_dot_pp_R0 = k_g/c_pg/R0*log(B+1);
-
-	massFlux_ = m_dot_pp_R0;
-
-	if(R<0){
-		Info<<"The burn-out time is "<<Time_<<endl;
-		FatalError << "The droplet is burnt out" << exit(FatalError);
+//calculate the streamwise velocity
+void analyticalRegion::calculateStreamwiseVelocity(){
+	if (similarVar>1){
+		streamwiseVelocity_ = 0;
 	}
-
-	Info<<"The radius of the droplet is "<<R<<endl;
-	Info<<"The K is "<<K<<endl;
-
-	FSR = log(B+1)/log(stoi_ratio*Y_O_infty+1);
-	FSR_ = FSR;
-
-	Info<<"The FSR is "<<FSR<<endl;
-
+	else{
+		streamwiseVelocity_ = u_x*similarVar*pow((1-similarVar), 0.6666666);
+	}
 }
 
+//calculate the transverse velocity
+void analyticalRegion::calculateTransverseVelocity(){
+	scalar v_sureface =  3*Foam::log(B+1)*k_g/2/c_pg/rho_boil/delta_1/pow(x, 0.25);
+	if (similarVar>1){
+		streamwiseVelocity_ = 0;
+	}
+	else{
+		transverseVelocity_ = v_sureface+((u_1*(delta_1*pow(x, 0.25) - zeta)*\
+		Foam::sqrt(1 - zeta/(delta_1*pow(x, 0.25))+VSMALL)*(12*delta_1*delta_1*Foam::sqrt(x)+18*delta_1*pow(x, 0.25)*zeta + 5*zeta*zeta))/\
+		(140*delta_1*delta_1*x+VSMALL))-3*delta_1*u_1/35/pow(x, 0.25);
+;
+	}
+	if (transverseVelocity_<0){transverseVelocity_ = 0;}
+}
+
+//calculate the temperature
 void analyticalRegion::calculateTemperature(){
-	scalar Part_1;
-	//scalar Part_6;
-
-	Part_1 = pow((B+1),(1-R/R0));
-	//Part_1 = exp(-m_dot_pp_R*Rsquare/k_g*c_pg/R0);
-	//Part_6 = c_pg*(T_infty-T_boil)+Delta_H*stoi_ratio*Y_O_infty+L;
-	interfaceTemperature_ = L*(Part_1-1)/c_pg+T_boil;;
-	//interfaceTemperature_ = (Part_6*Part_1-L)/c_pg+T_boil;
-	if( interfaceTemperature_ > 800 ){ interfaceTemperature_ = 800; }
+	if (similarVar>1){
+		interfaceTemperature_ = T_infty;
+	}
+	else{
+		scalar J = pow((1-similarVar), 0.6666666);
+		if (y<y_fl){
+			interfaceTemperature_ = (T_boil-T_infty)*((1-D_c)*J+D_c)+T_infty;
+		}
+		else{
+			interfaceTemperature_ = (T_boil-T_infty)*(D_c/r+1)*J+T_infty;
+		}
+	}
 }
 
+//calculate the fuel
 void analyticalRegion::calculateFuel(){
-	scalar Part_2;
-
-	Part_2 = 1-exp(-m_dot_pp_R*Rsquare/k_g*c_pg/R0);
-	interfaceFuel_ = (1+stoi_ratio*Y_O_infty)*Part_2-stoi_ratio*Y_O_infty;
-	if(interfaceFuel_<0){interfaceFuel_ = 0.01;}
-
+	if (similarVar>1){
+		interfaceFuel_ = 0;
+	}
+	else{
+		if (y<y_fl){
+			scalar J = pow((1-similarVar), 0.6666666);
+			interfaceFuel_ = Y_fw*((1+r)*J-r);
+		}
+		else{
+			interfaceFuel_ = 0;
+		}
+	}
 }
 
+//calculate the oxygen
 void analyticalRegion::calculateOxygen(){
-	scalar Part_5;
-
-	Part_5 = exp(-m_dot_pp_R*Rsquare/k_g*c_pg/R0)-1;
-
-	interfaceOxygen_ = (1+stoi_ratio*Y_O_infty)*Part_5/stoi_ratio+Y_O_infty;
-}
-
-void analyticalRegion::calculateAssimilation_FSR()
-{
-	scalar ln_Bplus1;
-	scalar B_temp;
-	scalar observedK;
-
-	ln_Bplus1 = observation_*log(stoi_ratio*Y_O_infty+1);
-	B_temp = exp(ln_Bplus1)-1;
-
-	observedK = 2*k_g/rho_l/c_pg*log(B_temp+1);
-
-	coeff = observedK/K;
-
-	if(coeff<0){coeff = 1;}
-
-	Info<<"Coefficient is "<<coeff<<endl;
-
-}
-
-void analyticalRegion::calculateAssimilation_dropletSize()
-{
-
-	scalar observedK;
-
-	observedK = (R0square-observation_)/Time_;
-	coeff = observedK/K;
-
-	if(coeff<0){coeff = 1;}
-
-	Info<<"Coefficient is "<<coeff<<endl;
-
+	if (similarVar>1){
+		interfaceOxygen_ = Y_O_infty;
+	}
+	else{
+		scalar J = pow((1-similarVar), 0.6666666);
+		if (y<y_fl){
+			interfaceOxygen_ = 0;
+		}
+		else{
+			interfaceOxygen_ = Y_O_infty*(1-(1+1/r)*J);
+		}
+	}
 }

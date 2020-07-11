@@ -50,75 +50,95 @@ class analyticalRegion
 {
 
 
-    //Static Menmbers
+  // Private Member
 
-    //static scalar B;
+  scalar x;
+  scalar y;
 
-    // Private Member
-    scalar heatFlux_;
-    scalar Time_;
-    scalar observation_;
+  const scalar Delta_H = 44926000;
+  const scalar stoi_ratio = 0.32;
 
+  const scalar T_boil = 371.5;
+  const scalar T_infty = 293.15;
+  const scalar Y_O_infty = 0.233;
+  const scalar g = 9.81;
 
-    scalar R0square;
-    scalar R;
-	  scalar Rsquare;
+  const scalar rho_infty = 1.225;
+  const scalar rho_boil = rho_infty*T_infty/T_boil;
 
-	const scalar Delta_H = 44926000;
-	const scalar stoi_ratio = 0.32;
-
-	const scalar T_boil = 371.5;
-	const scalar T_infty = 293.15;
-	const scalar Y_O_infty = 0.233;
-
-  scalar FSR;
-
-	scalar K;
-
-	const scalar k_g = 0.0926;
-	static scalar rho_l;
-	//scalar rho_g = 1;
+  const scalar k_g = 0.0926;
+  const scalar mu = 0.0000176;
   const scalar c_pl = 2240;
-	const scalar c_pg = 4220;
-	const scalar L = 316000;
+  const scalar c_pg = 4220;
+  const scalar L = 316000;
+  const scalar h_w = c_pg*(T_boil-T_infty);
+  const scalar tau = h_w/L;
 
-	//p represents prime notation
-	scalar q_dot_pp_R;
-	scalar q_dot_pp_R0;
-	scalar m_dot_pp_R;
-	scalar m_dot_pp_R0;
+  scalar Y_fw = (B-stoi_ratio*Y_O_infty)/(1+B);
+  scalar D_c = 1.2;
+  scalar r = Y_O_infty*stoi_ratio/Y_fw;
+  scalar J_fl = 1/(1+1/r);
+  scalar T_fl = (T_boil-T_infty)*((1-D_c)*J_fl+D_c)+T_infty;
+  scalar rho_fl = rho_infty*T_infty/T_fl;
+
+  //calcuate assisting parameters
+  scalar inter = 120*(1+B)*Foam::log(1+B)*k_g/B/rho_boil/c_pg/U_infty;
+
+  scalar delta_1 = Foam::pow(inter,0.25);
+
+  scalar u_1 = U_infty;
+
+  scalar zeta_fl = delta_1*Foam::pow(x, 0.5)*(1-Foam::pow(J_fl, 0.666666));
+  scalar zeta_delta = delta_1*Foam::pow(x, 0.5);
+
+  scalar y_fl = 2*rho_boil*zeta_fl/(rho_fl+rho_boil+VSMALL);
+
+  scalar Lambda_1 = (rho_fl-rho_boil)/rho_boil;
+  scalar Lambda_2 = y_fl+VSMALL;
+  scalar Lambda = Lambda_1/Lambda_2;
+
+
+  scalar Gamma = Lambda*y_fl*y_fl/2+y_fl;
+  scalar y_delta = (-2*Gamma*rho_boil+rho_infty*y_fl+rho_fl*y_fl+2*rho_boil*zeta_delta)/(rho_infty+rho_fl+VSMALL);
+
+  scalar Pi_1 = (rho_infty-rho_fl)/(y_delta-y_fl+VSMALL)/rho_boil;
+  scalar Pi_2 = (rho_infty-(rho_infty-rho_fl)/(y_delta-y_fl+VSMALL)*y_delta)/rho_boil;
+  scalar Pi_3 = Gamma-(Pi_1*y_fl*y_fl/2+Pi_2*y_fl);
+
+  scalar zeta = ((y<y_fl) ? (Lambda*y*y/2+y) : (Pi_1*y*y/2+Pi_2*y+Pi_3) );
+
+  scalar u_x = U_infty;
+  scalar delta_x = delta_1*Foam::pow(x, 0.5);
+  scalar similarVar = zeta/(delta_x+VSMALL);
 
 
 public:
 
-   scalar B_;
-   static scalar B;
-	 scalar massFlux_;
-	 scalar interfaceTemperature_;
-	 scalar R_;
-	 scalar interfaceFuel_;
-   scalar interfaceOxygen_;
-	 scalar R0;
-   scalar targetPara_;
-   scalar K_;
-   scalar FSR_;
+    scalar B_;
+    static scalar B;
+    static scalar U_infty;
+    scalar interfaceTemperature_;
+    scalar interfaceFuel_;
+    scalar interfaceOxygen_;
+    scalar streamwiseVelocity_;
+    scalar transverseVelocity_;
 
-   static scalar coeff;
+    scalar testValue = zeta;
 
     // Constructors
 
-        //- Construct from Time
-        analyticalRegion(scalar heatFlux, scalar Time, scalar R0Origin, scalar observation);
+    //- Construct from Time
+    analyticalRegion(scalar x_original, scalar y_original);
 
 
-	// Member functions
+    // Member functions
 
-	void calculateMassFlux();
-	void calculateTemperature();
-	void calculateFuel();
-  void calculateOxygen();
-	void calculateAssimilation_FSR();
-  void calculateAssimilation_dropletSize();
+    //scalar calculateJ();
+    void calculateStreamwiseVelocity();
+    void calculateTransverseVelocity();
+  	void calculateTemperature();
+  	void calculateFuel();
+    void calculateOxygen();
 
     //- Destructor
     ~analyticalRegion();
@@ -132,16 +152,12 @@ public:
 
 analyticalRegion::analyticalRegion
 (
-    scalar heatFlux,
-    scalar Time,
-    scalar R0Origin,
-    scalar observation
+    scalar x_original,
+    scalar y_original
 )
 {
-    heatFlux_ = heatFlux;
-    Time_ = Time;
-    R0 = R0Origin;
-    observation_ = observation;
+    y = x_original;
+    x = y_original;
 }
 
 
