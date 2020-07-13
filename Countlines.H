@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <fstream>
 
@@ -17,6 +18,7 @@ int Countlines(char *filename)
 
 	return n;
 }
+*/
 
 scalar analyticalRegion::B = 0.1;
 scalar condensedRegion::C = 1;
