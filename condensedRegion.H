@@ -67,7 +67,9 @@ public:
     scalar heatFlux_;
     scalar preheatLength_;
     scalar pyrolysisLengthIncrease_;
+    scalar pysolysisBurnOutIncrease_;
     static scalar C;
+    static scalar burnOutRate;
 
 
     // Constructors
@@ -81,6 +83,7 @@ public:
      //scalar calculateJ();
      void pyrolysisLengthIncrease_thermally_thick();
      void pyrolysisLengthIncrease_thermally_thin();
+     void pyrolysisBurnout();
 
      //- Destructor
      ~condensedRegion();

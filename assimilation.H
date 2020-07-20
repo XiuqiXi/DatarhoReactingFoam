@@ -48,6 +48,8 @@
 		condensedRegion solidPanel(gMax(hfp), timeInterval, preheatLength);
 		solidPanel.pyrolysisLengthIncrease_thermally_thick();
 		pyrolysisUpperPosition = pyrolysisUpperPosition+solidPanel.pyrolysisLengthIncrease_;
+		solidPanel.pyrolysisBurnout();
+		pyrolysisLowerPosition = pyrolysisLowerPosition+solidPanel.pysolysisBurnOutIncrease_;
 		//pyrolysisUpperPosition = 0.13;
 
 		std::ofstream file_pyrolysisUpperPosition;
@@ -59,7 +61,8 @@
 		<<timeInterval<<token::TAB\
 		<<pyrolysisUpperPosition<<token::TAB\
 		<<solidPanel.pyrolysisLengthIncrease_<<token::TAB\
-		<<gMax(hfp)<<token::TAB<<std::endl;
+		<<gMax(hfp)<<token::TAB
+		<<pyrolysisLowerPosition<<token::TAB<<std::endl;
 
 		file_pyrolysisUpperPosition.close();
 
